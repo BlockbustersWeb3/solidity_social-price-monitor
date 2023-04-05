@@ -6,7 +6,7 @@ describe("PriceMonitor", function () {
     const [deployer] = await ethers.getSigners();
 
     const PriceMonitor = await ethers.getContractFactory("PriceMonitor");
-    const priceMonitor = await PriceMonitor.deploy();
+    const priceMonitor = await PriceMonitor.deploy(2);
 
     return { priceMonitor, deployer };
   }
@@ -17,5 +17,44 @@ describe("PriceMonitor", function () {
 
       expect(await priceMonitor.owner()).to.equal(deployer.address);
     });
+  });
+
+  describe("PriceMonitor", function () {
+    it("Should create price monitoring emitting event", async function () {
+      const { priceMonitor, deployer } = await loadFixture(deployFixture);
+
+      args = [001, 001, 1525, 001];
+
+      await expect(priceMonitor.addPriceReport(...args))
+        .to.emit(priceMonitor, "PriceReported")
+        .withArgs(...args, deployer.address);
+    });
+
+    it("Should create price added to the list of reported prices", async function () {
+      const { priceMonitor, deployer } = await loadFixture(deployFixture);
+
+      const priceReportId = 001;
+      const productId = 099;
+      const price = 1525;
+      const storeId = 044;
+      await priceMonitor.addPriceReport(
+        priceReportId,
+        productId,
+        price,
+        storeId
+      );
+      const priceReport = await priceMonitor.getPriceReport(0)
+
+      expect(priceReport.id).to.equal(priceReportId);
+      expect(priceReport.productId).to.equal(productId);
+      expect(priceReport.price).to.equal(price);
+      expect(priceReport.storeId).to.equal(storeId);
+      expect(priceReport.reporter).to.equal(deployer.address);
+    });
+
+    it("Should create a store");
+    it("Should create a product");
+    it("Should attach a proof");
+    it("Should be validated ");
   });
 });
