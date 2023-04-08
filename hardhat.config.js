@@ -2,7 +2,8 @@ require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-deploy");
 require("dotenv").config();
 
-const { GOERLI_ALCHEMY_APIKEY, GOERLI_PRIVATE_KEY, MUMBAI_APIKEY } = process.env;
+const { GOERLI_ALCHEMY_APIKEY, GOERLI_PRIVATE_KEY, MUMBAI_APIKEY } =
+  process.env;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -15,11 +16,10 @@ module.exports = {
   },
   networks: {
     hardhat: {
+      chainId: 31337,
       forking: {
         url: `https://eth-goerli.g.alchemy.com/v2/${GOERLI_ALCHEMY_APIKEY}`,
-        accounts: [GOERLI_PRIVATE_KEY],
         blockNumber: 8789763,
-        chainId: 31337,
       },
     },
     goerli: {
@@ -31,7 +31,7 @@ module.exports = {
       url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_APIKEY}`,
       accounts: [GOERLI_PRIVATE_KEY],
       chainId: 80001,
-    }
+    },
   },
   namedAccounts: {
     deployer: {

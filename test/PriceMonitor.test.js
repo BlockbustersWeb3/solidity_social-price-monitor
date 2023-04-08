@@ -1,12 +1,17 @@
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
+const { networkConfig } = require("../helper-hardhat-config");
+const { network } = require("hardhat");
 
 describe("PriceMonitor", function () {
   async function deployFixture() {
     const [deployer] = await ethers.getSigners();
+    chainId = network.config.chainId;
+
+    epnsProxyAddress = networkConfig[chainId]["epnsProxyAddress"];
 
     const PriceMonitor = await ethers.getContractFactory("PriceMonitor");
-    const priceMonitor = await PriceMonitor.deploy(2);
+    const priceMonitor = await PriceMonitor.deploy(2, epnsProxyAddress);
 
     return { priceMonitor, deployer };
   }

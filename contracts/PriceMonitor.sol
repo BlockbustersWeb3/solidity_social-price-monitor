@@ -38,16 +38,15 @@ contract PriceMonitor is Ownable {
         string location;
     }
 
-    IPUSHCommInterface PUSHCOMM;
+    IPUSHCommInterface immutable PUSHCOMM;
+    address immutable CHANNEL_ADDRESS;
+    uint8 immutable i_decimals;
 
     Counters.Counter private _priceReportIds;
     Counters.Counter private _productIds;
 
-    uint8 i_decimals;
-
-    // Product[] s_productList;
-    mapping(uint256 => Product) s_Products;
-    Store[] s_storeList;
+    mapping(uint256 => Product) s_products;
+    mapping(uint256 => Store) s_stores;
     mapping(uint256 => PriceReport) s_priceReports;
 
     event PriceReported(
@@ -65,10 +64,11 @@ contract PriceMonitor is Ownable {
         string _description
     );
 
-    constructor(uint8 _decimals) {
+    constructor(uint8 _decimals, address _epns_proxy_address) {
         i_decimals = _decimals;
 
-        address EPNS_COMMV_1_5_STAGING = 0xb3971BCef2D791bc4027BbfedFb47319A4AAaaAa; //MUMBAI
+        CHANNEL_ADDRESS = msg.sender;
+        address EPNS_COMMV_1_5_STAGING = _epns_proxy_address;
         PUSHCOMM = IPUSHCommInterface(EPNS_COMMV_1_5_STAGING);
     }
 
@@ -94,10 +94,7 @@ contract PriceMonitor is Ownable {
             msg.sender
         );
 
-        address CHANNEL_ADDRESS = 0xCfA675376B1Aca49B30A2C836BB5D0834907A3cb;
-        address to = 0xCfA675376B1Aca49B30A2C836BB5D0834907A3cb;
-
-        // IPUSHCommInterface(EPNS_COMMV_1_5_STAGING).sendNotification(
+        address to = address(this);
         PUSHCOMM.sendNotification(
             CHANNEL_ADDRESS, // from channel
             to, // to recipient, put address(this) in case you want Broadcast or Subset. For Targetted put the address to which you want to send
@@ -107,7 +104,7 @@ contract PriceMonitor is Ownable {
                     abi.encodePacked(
                         "0", // this is notification identity: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
                         "+", // segregator
-                        "3", // this is payload type: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/payload (1, 3 or 4) = (Broadcast, targetted or subset)
+                        "1", // this is payload type: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/payload (1, 3 or 4) = (Broadcast, targetted or subset)
                         "+", // segregator
                         "Price Report Alert", // this is notificaiton title
                         "+", // segregator
@@ -131,7 +128,7 @@ contract PriceMonitor is Ownable {
         string memory _description
     ) public {
         uint256 currentProductId = _productIds.current();
-        s_Products[currentProductId] = Product(_name, _brand, _description);
+        s_products[currentProductId] = Product(_name, _brand, _description);
         _productIds.increment();
 
         emit ProductCreated(currentProductId, _name, _brand, _description);
@@ -147,6 +144,6 @@ contract PriceMonitor is Ownable {
     }
 
     function getProduct(uint256 index) public view returns (Product memory) {
-        return s_Products[index];
+        return s_products[index];
     }
 }
