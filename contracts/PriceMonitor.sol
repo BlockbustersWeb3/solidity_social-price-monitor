@@ -133,7 +133,36 @@ contract PriceMonitor is Ownable {
 
         emit ProductCreated(currentProductId, _name, _brand, _description);
 
-        // TODO Notify via PUSH
+        address to = address(this);
+        PUSHCOMM.sendNotification(
+            CHANNEL_ADDRESS, // from channel
+            to, // to recipient, put address(this) in case you want Broadcast or Subset. For Targetted put the address to which you want to send
+            bytes(
+                string(
+                    // We are passing identity here: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
+                    abi.encodePacked(
+                        "0", // this is notification identity: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
+                        "+", // segregator
+                        "1", // this is payload type: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/payload (1, 3 or 4) = (Broadcast, targetted or subset)
+                        "+", // segregator
+                        "Price Report Alert: Product added", // this is notificaiton title
+                        "+", // segregator
+                        "Check this added product! ",
+                        " | reported by: ", // notification body
+                        msg.sender.toHexString(), // notification body
+                        " | Product ID: ", // notification body
+                        currentProductId.toString(), // notification body
+                        " | Name: ", // notification body
+                        _name, // notification body
+                        " | Brand: ", // notification body
+                        _brand, // notification body
+                        " | Description: ", // notification body
+                        _description, // notification body
+                        " PUSH to you!" // notification body
+                    )
+                )
+            )
+        );
     }
 
     /* getters */
