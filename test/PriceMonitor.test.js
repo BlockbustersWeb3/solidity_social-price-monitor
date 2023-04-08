@@ -23,29 +23,27 @@ describe("PriceMonitor", function () {
     it("Should create price monitoring emitting event", async function () {
       const { priceMonitor, deployer } = await loadFixture(deployFixture);
 
-      args = [001, 001, 1525, 001];
+      args = [001, 1525, 001];
 
       await expect(priceMonitor.addPriceReport(...args))
         .to.emit(priceMonitor, "PriceReported")
-        .withArgs(...args, deployer.address);
+        .withArgs(0, ...args, deployer.address);
     });
 
     it("Should create price added to the list of reported prices", async function () {
       const { priceMonitor, deployer } = await loadFixture(deployFixture);
 
-      const priceReportId = 001;
       const productId = 099;
       const price = 1525;
       const storeId = 044;
       await priceMonitor.addPriceReport(
-        priceReportId,
+        // priceReportId,
         productId,
         price,
         storeId
       );
       const priceReport = await priceMonitor.getPriceReport(0)
 
-      expect(priceReport.id).to.equal(priceReportId);
       expect(priceReport.productId).to.equal(productId);
       expect(priceReport.price).to.equal(price);
       expect(priceReport.storeId).to.equal(storeId);
