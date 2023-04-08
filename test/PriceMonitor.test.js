@@ -42,7 +42,7 @@ describe("PriceMonitor", function () {
         price,
         storeId
       );
-      const priceReport = await priceMonitor.getPriceReport(0)
+      const priceReport = await priceMonitor.getPriceReport(0);
 
       expect(priceReport.productId).to.equal(productId);
       expect(priceReport.price).to.equal(price);
@@ -50,8 +50,22 @@ describe("PriceMonitor", function () {
       expect(priceReport.reporter).to.equal(deployer.address);
     });
 
+    it("Should create a product", async function () {
+      const { priceMonitor } = await loadFixture(deployFixture);
+
+      const name = "Rice 1 KG";
+      const brand = "Test";
+      const description = "More info";
+      await priceMonitor.addProduct(name, brand, description);
+
+      const product = await priceMonitor.getProduct(0);
+
+      expect(product.name).to.equal(name);
+      expect(product.brand).to.equal(brand);
+      expect(product.description).to.equal(description);
+    });
+
     it("Should create a store");
-    it("Should create a product");
     it("Should attach a proof");
     it("Should be validated ");
   });

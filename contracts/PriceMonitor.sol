@@ -19,10 +19,6 @@ contract PriceMonitor is Ownable {
     using Strings for address;
     using Counters for Counters.Counter;
 
-    IPUSHCommInterface PUSHCOMM;
-
-    Counters.Counter private _priceReportIds;
-
     struct PriceReport {
         uint256 productId;
         uint256 price;
@@ -31,7 +27,6 @@ contract PriceMonitor is Ownable {
     }
 
     struct Product {
-        uint256 id;
         string name;
         string brand;
         string description;
@@ -43,9 +38,15 @@ contract PriceMonitor is Ownable {
         string location;
     }
 
+    IPUSHCommInterface PUSHCOMM;
+
+    Counters.Counter private _priceReportIds;
+    Counters.Counter private _productIds;
+
     uint8 i_decimals;
 
-    Product[] s_productList;
+    // Product[] s_productList;
+    mapping(uint256 => Product) s_Products;
     Store[] s_storeList;
     mapping(uint256 => PriceReport) s_priceReports;
 
@@ -55,6 +56,13 @@ contract PriceMonitor is Ownable {
         uint256 price,
         uint256 indexed storeId,
         address indexed reporter
+    );
+
+    event ProductCreated(
+        uint256 id,
+        string _name,
+        string indexed _brand,
+        string _description
     );
 
     constructor(uint8 _decimals) {
@@ -69,8 +77,8 @@ contract PriceMonitor is Ownable {
         uint256 _price,
         uint256 _storeId
     ) public {
-        uint256 currentpriceReportId = _priceReportIds.current();
-        s_priceReports[currentpriceReportId] = PriceReport(
+        uint256 currentPriceReportId = _priceReportIds.current();
+        s_priceReports[currentPriceReportId] = PriceReport(
             _productId,
             _price,
             _storeId,
@@ -79,7 +87,7 @@ contract PriceMonitor is Ownable {
         _priceReportIds.increment();
 
         emit PriceReported(
-            currentpriceReportId,
+            currentPriceReportId,
             _productId,
             _price,
             _storeId,
@@ -117,10 +125,28 @@ contract PriceMonitor is Ownable {
         );
     }
 
+    function addProduct(
+        string memory _name,
+        string memory _brand,
+        string memory _description
+    ) public {
+        uint256 currentProductId = _productIds.current();
+        s_Products[currentProductId] = Product(_name, _brand, _description);
+        _productIds.increment();
+
+        emit ProductCreated(currentProductId, _name, _brand, _description);
+
+        // TODO Notify via PUSH
+    }
+
     /* getters */
     function getPriceReport(
         uint256 index
     ) public view returns (PriceReport memory) {
         return s_priceReports[index];
+    }
+
+    function getProduct(uint256 index) public view returns (Product memory) {
+        return s_Products[index];
     }
 }
