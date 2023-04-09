@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+// import "hardhat/console.sol";
+
 interface IPUSHCommInterface {
     function sendNotification(
         address _channel,
@@ -13,6 +15,8 @@ interface IPUSHCommInterface {
         bytes calldata _identity
     ) external;
 }
+
+error PriceMonitor__IsNotSubscriber();
 
 contract PriceMonitor is Ownable {
     using Strings for uint;
@@ -48,6 +52,9 @@ contract PriceMonitor is Ownable {
     mapping(uint256 => Product) s_products;
     mapping(uint256 => Store) s_stores;
     mapping(uint256 => PriceReport) s_priceReports;
+
+    mapping(uint256 => mapping(address => bool)) productSubscribers;
+    mapping(uint256 => address[]) productSubscribersAll;
 
     event PriceReported(
         uint256 id,
@@ -165,6 +172,29 @@ contract PriceMonitor is Ownable {
         );
     }
 
+    function addProductSubscriber(uint256 _productId) public {
+        productSubscribersAll[_productId].push(msg.sender);
+        productSubscribers[_productId][msg.sender] = true;
+    }
+
+    function removeProductSubscriber(uint256 _productId) public {
+        if (!productSubscribers[_productId][msg.sender]) {
+            revert PriceMonitor__IsNotSubscriber();
+        }
+
+        address[] memory allSubscribers = productSubscribersAll[_productId];
+        for (uint256 i = 0; i < allSubscribers.length; i++) {
+            if (allSubscribers[i] == msg.sender) {
+                productSubscribersAll[_productId][i] = productSubscribersAll[
+                    _productId
+                ][allSubscribers.length - 1];
+                productSubscribersAll[_productId].pop();
+
+                productSubscribers[_productId][msg.sender] = false;
+            }
+        }
+    }
+
     /* getters */
     function getPriceReport(
         uint256 index
@@ -174,5 +204,11 @@ contract PriceMonitor is Ownable {
 
     function getProduct(uint256 index) public view returns (Product memory) {
         return s_products[index];
+    }
+
+    function isSubscribedToProduct(
+        uint256 _productId
+    ) public view returns (bool) {
+        return productSubscribers[_productId][msg.sender];
     }
 }
