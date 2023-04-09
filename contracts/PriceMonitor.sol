@@ -28,6 +28,7 @@ contract PriceMonitor is Ownable {
         uint256 price;
         uint256 storeId;
         address reporter;
+        address[] validators;
     }
 
     struct Product {
@@ -71,6 +72,12 @@ contract PriceMonitor is Ownable {
         string _description
     );
 
+    event PriceReportValidated(
+        uint256 indexed priceReportId,
+        address indexed validator,
+        uint256 validatorsCount
+    );
+
     constructor(uint8 _decimals, address _epns_proxy_address) {
         i_decimals = _decimals;
 
@@ -89,7 +96,8 @@ contract PriceMonitor is Ownable {
             _productId,
             _price,
             _storeId,
-            msg.sender
+            msg.sender,
+            new address[](0)
         );
         _priceReportIds.increment();
 
@@ -195,6 +203,17 @@ contract PriceMonitor is Ownable {
         }
     }
 
+    function validatePriceReport(uint256 _priceReportId) public {
+        // TODO Check if sender is in assigned validators list
+        s_priceReports[_priceReportId].validators.push(msg.sender);
+
+        emit PriceReportValidated(
+            _priceReportId,
+            msg.sender,
+            getValidatorsCount(_priceReportId)
+        );
+    }
+
     /* getters */
     function getPriceReport(
         uint256 index
@@ -210,5 +229,11 @@ contract PriceMonitor is Ownable {
         uint256 _productId
     ) public view returns (bool) {
         return productSubscribers[_productId][msg.sender];
+    }
+
+    function getValidatorsCount(
+        uint _priceReportId
+    ) public view returns (uint256) {
+        return s_priceReports[_priceReportId].validators.length;
     }
 }

@@ -72,10 +72,9 @@ describe("PriceMonitor", function () {
 
     it("Should create a store");
     it("Should attach a proof");
-    it("Should be validated ");
   });
 
-  describe("Validators", function () {
+  describe("Subscription", function () {
     it("User can subscribe to be a validator for price report on a specific product", async function () {
       const { priceMonitor, user1 } = await loadFixture(deployFixture);
 
@@ -98,7 +97,7 @@ describe("PriceMonitor", function () {
       const { priceMonitor, user1, user2 } = await loadFixture(deployFixture);
 
       await priceMonitor.connect(user1).addProductSubscriber(1);
-      
+
       await expect(
         priceMonitor.connect(user2).removeProductSubscriber(1)
       ).to.be.revertedWithCustomError(
@@ -106,12 +105,38 @@ describe("PriceMonitor", function () {
         "PriceMonitor__IsNotSubscriber"
       );
     });
+  });
 
+  describe("Validations", function () {
+    it("Price Report is validated", async function () {
+      const { priceMonitor } = await loadFixture(deployFixture);
+
+      const productId = 099;
+      const price = 1525;
+      const storeId = 044;
+      await priceMonitor.addPriceReport(productId, price, storeId);
+
+      await priceMonitor.validatePriceReport(0);
+
+      expect(await priceMonitor.getValidatorsCount(0)).to.equal(1);
+    });
+
+    it("Price Report emits event after validation", async function () {
+      const { priceMonitor, deployer } = await loadFixture(deployFixture);
+
+      const productId = 099;
+      const price = 1525;
+      const storeId = 044;
+      await priceMonitor.addPriceReport(productId, price, storeId);
+
+      await expect(priceMonitor.validatePriceReport(0))
+        .to.emit(priceMonitor, "PriceReportValidated")
+        .withArgs(0, deployer.address, 1);
+    });
+
+    it("Price Report has completed all validations");
     it(
       "Users are randomly assigned to be a validator out of the subscribed users"
     );
   });
 });
-
-// pid: address: true
-// How can I make sure address in list is unique
