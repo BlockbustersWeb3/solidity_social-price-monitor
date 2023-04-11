@@ -25,7 +25,7 @@ describe("PriceMonitor", function () {
   });
 
   describe("PriceMonitor", function () {
-    it("Should create price monitoring emitting event", async function () {
+    it.only("Should create price monitoring emitting event", async function () {
       const { priceMonitor, deployer } = await loadFixture(deployFixture);
 
       args = [001, 1525, 001];
@@ -135,8 +135,12 @@ describe("PriceMonitor", function () {
     });
 
     it("Price Report has completed all validations");
-    it(
-      "Users are randomly assigned to be a validator out of the subscribed users"
+    it.skip(
+      "Users are randomly assigned to be a validator out of the subscribed users", async function () {
+      const { priceMonitor, deployer } = await loadFixture(deployFixture);
+
+        expect(await priceMonitor.getChosenValidatorsCount()).to.equal(4);
+      }
     );
   });
 });

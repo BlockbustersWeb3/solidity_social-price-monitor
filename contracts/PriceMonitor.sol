@@ -2,11 +2,16 @@
 
 pragma solidity 0.8.18;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+// import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-// import "hardhat/console.sol";
+//VRF
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
+
+import "hardhat/console.sol";
 
 interface IPUSHCommInterface {
     function sendNotification(
@@ -18,7 +23,7 @@ interface IPUSHCommInterface {
 
 error PriceMonitor__IsNotSubscriber();
 
-contract PriceMonitor is Ownable {
+contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
     using Strings for uint;
     using Strings for address;
     using Counters for Counters.Counter;
@@ -28,6 +33,7 @@ contract PriceMonitor is Ownable {
         uint256 price;
         uint256 storeId;
         address reporter;
+        uint256[] assignedValidators; // replace type to address[]
         address[] validators;
     }
 
@@ -54,15 +60,42 @@ contract PriceMonitor is Ownable {
     mapping(uint256 => Store) s_stores;
     mapping(uint256 => PriceReport) s_priceReports;
 
-    mapping(uint256 => mapping(address => bool)) productSubscribers;
+    mapping(uint256 => mapping(address => bool)) productSubscribers; // TODO Check if this mapping it's necessary since were adding and deleting items from array
     mapping(uint256 => address[]) productSubscribersAll;
+
+    //VRF
+    struct RequestStatus {
+        bool fulfilled; // whether the request has been successfully fulfilled
+        bool exists; // whether a requestId exists
+        uint256[] randomWords;
+    }
+    mapping(uint256 => RequestStatus)
+        public s_requests; /* requestId --> requestStatus */
+    VRFCoordinatorV2Interface COORDINATOR;
+
+    mapping(uint256 => uint256) requestToPriceReport;
+
+    // Your subscription ID.
+    uint64 s_subscriptionId;
+
+    // past requests Id.
+    uint256[] public requestIds;
+    uint256 public lastRequestId;
+
+    bytes32 i_keyHash;
+    uint32 i_callbackGasLimit;
+    uint16 i_requestConfirmations;
+    uint32 i_numWords;
+
+    // Events
 
     event PriceReported(
         uint256 id,
         uint256 indexed productId,
         uint256 price,
         uint256 indexed storeId,
-        address indexed reporter
+        address indexed reporter,
+        uint256 requestId
     );
 
     event ProductCreated(
@@ -78,12 +111,28 @@ contract PriceMonitor is Ownable {
         uint256 validatorsCount
     );
 
-    constructor(uint8 _decimals, address _epns_proxy_address) {
+    constructor(
+        uint8 _decimals,
+        address _epns_proxy_address
+    )
+        VRFConsumerBaseV2(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed) // MUMBAI
+        ConfirmedOwner(msg.sender)
+    {
         i_decimals = _decimals;
 
         CHANNEL_ADDRESS = msg.sender;
         address EPNS_COMMV_1_5_STAGING = _epns_proxy_address;
         PUSHCOMM = IPUSHCommInterface(EPNS_COMMV_1_5_STAGING);
+
+        //VRF
+        COORDINATOR = VRFCoordinatorV2Interface(
+            0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed // MUMBAI
+        );
+        i_keyHash = 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f; // MUMBAI
+        s_subscriptionId = 4205; // TODO Private Info, remove in Chainlink
+        i_requestConfirmations = 3;
+        i_callbackGasLimit = 2500000; // MUMBAI
+        i_numWords = 4;
     }
 
     function addPriceReport(
@@ -97,16 +146,22 @@ contract PriceMonitor is Ownable {
             _price,
             _storeId,
             msg.sender,
+            new uint[](0), // TODO replace with address[]
             new address[](0)
         );
         _priceReportIds.increment();
+
+        // when a pricereport is created, it calls a function to assign validators
+        uint256 requestId = requestRandomWords(); // assignValidators(currentPriceReportId);
+        requestToPriceReport[requestId] = currentPriceReportId;
 
         emit PriceReported(
             currentPriceReportId,
             _productId,
             _price,
             _storeId,
-            msg.sender
+            msg.sender,
+            requestId
         );
 
         address to = address(this);
@@ -214,6 +269,84 @@ contract PriceMonitor is Ownable {
         );
     }
 
+    // function requestForValidators(uint256 _priceReportId) private {
+    //     uint256 requestId = requestRandomWords(_priceReportId);
+    //     s_priceReportRequests[_priceReportId].push(requestId);
+
+    //     emit RequestForValidatorsSent(_priceReportId, requestId, i_numWords);
+    // }
+
+    function requestRandomWords() private returns (uint256 requestId) {
+        // Will revert if subscription is not set and funded.
+        requestId = COORDINATOR.requestRandomWords(
+            i_keyHash,
+            s_subscriptionId,
+            i_requestConfirmations,
+            i_callbackGasLimit,
+            i_numWords
+        );
+        console.log("Request ID: ");
+        s_requests[requestId] = RequestStatus({
+            randomWords: new uint256[](0),
+            exists: true,
+            fulfilled: false
+        });
+        requestIds.push(requestId);
+        lastRequestId = requestId;
+        // emit RequestSent(requestId, numWords);
+        return requestId;
+    }
+
+    function fulfillRandomWords(
+        uint256 _requestId,
+        uint256[] memory _randomWords
+    ) internal override {
+        require(s_requests[_requestId].exists, "request not found");
+        s_requests[_requestId].fulfilled = true;
+        s_requests[_requestId].randomWords = _randomWords;
+        // emit RequestFulfilled(_priceReportId, _requestId, _randomWords);
+
+        assignValidators(requestToPriceReport[_requestId], _randomWords);
+    }
+
+    function getRequestStatus(
+        uint256 _requestId
+    )
+        external
+        view
+        returns (
+            bool fulfilled,
+            uint256[] memory randomWords,
+            uint256 priceReportId
+        )
+    {
+        require(s_requests[_requestId].exists, "request not found");
+        RequestStatus memory request = s_requests[_requestId];
+        return (
+            request.fulfilled,
+            request.randomWords,
+            requestToPriceReport[_requestId]
+        );
+    }
+
+    function assignValidators(
+        uint256 _priceReportId,
+        uint256[] memory _randomWords
+    ) private {
+        s_priceReports[_priceReportId].assignedValidators = _randomWords;
+        // s_priceReports[_priceReportId].assignedValidators = validators;
+        for (uint256 i = 0; i < _randomWords.length; i++) {
+            console.log("Validators: ", i, "->", _randomWords[i]);
+        }
+        // get 4 random numbers
+        //// get random numbers
+
+        // choose 4 address from productSubscribersAll
+        // add them to mapping s_assignedValidators[_priceReportId] = chosenAddress
+        // emit event
+        // notified chosen validators
+    }
+
     /* getters */
     function getPriceReport(
         uint256 index
@@ -237,3 +370,12 @@ contract PriceMonitor is Ownable {
         return s_priceReports[_priceReportId].validators.length;
     }
 }
+
+// TODO
+// when a pricereport is created, it calls a function to assign validators
+// these validators are assigned into a mapping priceReportId => address[] assignedValidators
+// and event is emitted
+// a PUSH Notification is sent to assigned validators
+
+// a priceReportId might require multiple calls for validators if any turn down its assignment
+// so create a mapping priceReportId => requestId => bool requestIdFullfilled
