@@ -3,3 +3,9 @@ artifacts
 cache
 .env
 deployments
+frontend/Gemfile.lock
+frontend/node_modules/
+frontend/*.zip
+frontend/build-product/
+frontend/.DS_Store
+frontend/dist/

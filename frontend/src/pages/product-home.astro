@@ -1,0 +1,100 @@
+---
+import Layout from '../layouts/Layout.astro';
+import data from '../../public/data.json';
+import '../../assets/scss/astro-ecommerce.scss';
+import Navbar from '../components/navbar';
+import Footer from '../components/footer';
+import StoreNavbar from '../components/store/storeNavbar';
+import CardProduct from '../components/products/cardProduct';
+import CardCategory from '../components/products/cardCategory';
+import ProductOverviewGrid from '../components/products/productOverviewGrid';
+import ProductOverviewGallery from '../components/products/productOverviewGallery';
+import ShoppingCart from '../components/cart/shoppingCart';
+import ShoppingCart2 from '../components/cart/shoppingCart2';
+import ProductQuickview from '../components/products/productQuickview';
+import ProductQuickview2 from '../components/products/productQuickview2';
+import ProductFeature from '../components/products/productFeature';
+import ProductFeature2 from '../components/products/productFeature2';
+import CategoryFilters from '../components/products/categoryFilters';
+import StoreNavigation from '../components/store/storeNavigation';
+import StoreDoubleColumn from '../components/store/storeDoubleColumn';
+import TestimonialsFade from '../components/promo/testimonialsFade';
+import PromoSectionLarge from '../components/promo/promoSectionLarge';
+import CheckoutOrderSummary from '../components/checkout/checkoutOrderSummary';
+import CheckoutMultiStep from '../components/checkout/checkoutMultiStep';
+import ReviewSimple from '../components/reviews/reviewSimple';
+import ReviewSummaryChart from '../components/reviews/reviewSummaryChart';
+import OrderSummaries from '../components/order/orderSummaries';
+import OrderHistory from '../components/order/orderHistory';
+import IncentiveLarge from '../components/incentives/incentiveLarge';
+import IncentiveCols from '../components/incentives/incentiveCols';
+
+let cartItems = [];
+data.shoppingCart.map(id => 
+  data.products.filter(x => x.id == id).map(x => cartItems.push(x))
+)
+let cartItems2 = [];
+data.shoppingCart2.map(id => 
+  data.products.filter(x => x.id == id).map(x => cartItems2.push(x))
+)
+
+// filter reviews with ID 01
+let productReviews = data.reviews.filter(x => x.productID == "01");
+
+let orderProducts = [];
+
+data.orders[0].products.forEach(productDetails => {
+  data.products.forEach(product => {
+    if (product.id == productDetails.id) {
+      orderProducts.push(product);
+    }
+  });
+})
+
+let orderHistoryProducts = new Set();
+
+data.orders.forEach((order) => {
+  order.products.forEach(productDetails => {
+    data.products.forEach(product => {
+      if (product.id == productDetails.id) {
+        orderHistoryProducts.add(product);
+      }
+    });
+  })
+})
+
+---
+<script>
+  function toggleHeart(e) {
+    e.target.classList.toggle('fas');
+    e.target.classList.toggle('far');
+    e.target.classList.toggle('text-danger');
+  }
+  
+  document.getElementById('heart1').addEventListener("click", toggleHeart);
+</script>
+
+<Layout title="Astro Ecommerce">
+	<main>
+    <Navbar />
+    <div class="container mt-5">
+
+      <div class="row">
+        {data.products.map(product => 
+          <div class="col-md-6 col-lg-3">
+            <CardProduct 
+              thumb_src = {product.thumb_src}
+              thumb_alt = {product.thumb_alt}
+              color = {product.color}
+              colors = {product.colors}
+              title = {product.title}
+              description = {product.description}
+              price = {product.price}
+              position = "center"
+            />
+          </div>
+        )}        
+      </div>
+    </div>
+  </main>
+</Layout>
