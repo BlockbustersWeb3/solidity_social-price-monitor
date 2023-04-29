@@ -14,6 +14,10 @@ export default function TestimonialsFade({
   pageHeaderRadius,
 }: Props) {
 
+  async function requestAccount() {
+    console.log("Requesting access...")
+  }
+
   const styles = {
     pageHeader: {
       backgroundImage: 'url(' + pageHeaderBgImg + ')',
@@ -32,7 +36,7 @@ export default function TestimonialsFade({
               <div className="col-lg-8 col-sm-9 text-center mx-auto">
                 <h1 className="text-white mb-4">{title}</h1>
                 <p className="lead text-white mb-sm-6 mb-4">{full_description}</p>
-                <button className="btn btn-primary btn-lg">Connect</button>
+                <button className="btn btn-primary btn-lg" onClick={requestAccount}>Connect</button>
               </div>
             </div>
           </div>
