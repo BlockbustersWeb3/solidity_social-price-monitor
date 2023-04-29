@@ -24,6 +24,10 @@ We want to release an MVP with these main features:
 * Victor Daniel Ome: [@tbd](https://twitter.com/tbd)
 * David Santiago Garcia Chicangana: [@Tisandg](https://twitter.com/Tisandg)
 
+## Communication:
+* Discord for realtime communication
+* Notion for documentation and tasks
+
 # HOW TO RUN THE PROJECT (TBD)
 
 This is a basic hardhat template to get you started writing and compiling contract.
