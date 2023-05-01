@@ -8,12 +8,38 @@ import Navbar from '../components/navbar';
 import StoreDoubleColumn from '../components/store/storeDoubleColumn';
 import TestimonialsFade from '../components/promo/testimonialsFade';
 import PromoSectionLarge from '../components/promo/promoSectionLarge';
-
+import MainContainer from '../components/authentication/MainContainer';
+import { ethers } from 'ethers';
+import InteractiveButton from '../components/authentication/InteractiveButton';
 ---
 
+
+<script>
+  /**
+   * Request access to the User's META MASK WALLET
+   */
+  async function requestAccount() {
+    //Check if the Meta Mask Extensions exists
+    if(window.ethereum){
+      console.log("detected")
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      })
+      return accounts[0]
+    }else{
+      console.log("Meta Mask not detected")
+    }
+  }
+
+  
+
+  //document.getElementById('btn-connection-wallet').addEventListener("click", connectWallet);
+</script>
+
 <Layout title="Social Price monitoring">
-	<main>
-    <Navbar />
+  <MainContainer client:load>
+    <!-- <InteractiveButton/> -->
+    <Navbar client:load/>
     <PromoSectionLarge 
       title={"social Price Monitoring"}
       full_description={data.products[0].full_description}  
@@ -73,6 +99,7 @@ import PromoSectionLarge from '../components/promo/promoSectionLarge';
     <StoreDoubleColumn />
 
     </div>
-  </main>
+  </MainContainer>
+    
 
 </Layout>
