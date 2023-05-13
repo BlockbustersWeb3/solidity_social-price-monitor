@@ -2,6 +2,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
 const { networkConfig } = require("../helper-hardhat-config");
 const { network } = require("hardhat");
+const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 
 describe("PriceMonitor", function () {
   async function deployFixture() {
@@ -10,9 +11,13 @@ describe("PriceMonitor", function () {
 
     epnsProxyAddress = networkConfig[chainId]["epnsProxyAddress"];
 
-    const PriceMonitor = await ethers.getContractFactory("PriceMonitor");
-    const priceMonitor = await PriceMonitor.deploy(2, epnsProxyAddress);
+    await deployments.fixture(["mocks", "pricemonitor"]);
 
+    // const PriceMonitor = await ethers.getContractFactory("PriceMonitor");
+    // const priceMonitor = await PriceMonitor.deploy(2, epnsProxyAddress);
+
+    const priceMonitor = await ethers.getContract("PriceMonitor");
+    
     return { priceMonitor, deployer, user1, user2 };
   }
 
@@ -25,14 +30,14 @@ describe("PriceMonitor", function () {
   });
 
   describe("PriceMonitor", function () {
-    it.only("Should create price monitoring emitting event", async function () {
+    it("Should create price monitoring emitting event", async function () {
       const { priceMonitor, deployer } = await loadFixture(deployFixture);
 
       args = [001, 1525, 001];
 
       await expect(priceMonitor.addPriceReport(...args))
         .to.emit(priceMonitor, "PriceReported")
-        .withArgs(0, ...args, deployer.address);
+        .withArgs(0, ...args, deployer.address, anyValue);
     });
 
     it("Should create price added to the list of reported prices", async function () {

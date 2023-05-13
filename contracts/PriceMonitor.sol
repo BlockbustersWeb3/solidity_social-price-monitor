@@ -111,11 +111,16 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         uint256 validatorsCount
     );
 
+
     constructor(
         uint8 _decimals,
-        address _epns_proxy_address
+        address _epns_proxy_address,
+        address vrfCoordinatorV2,
+        uint64 subscriptionId,
+        bytes32 keyHash,
+        uint32 callbackGasLimit
     )
-        VRFConsumerBaseV2(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed) // MUMBAI
+        VRFConsumerBaseV2(vrfCoordinatorV2)
         ConfirmedOwner(msg.sender)
     {
         i_decimals = _decimals;
@@ -126,12 +131,12 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
 
         //VRF
         COORDINATOR = VRFCoordinatorV2Interface(
-            0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed // MUMBAI
+            vrfCoordinatorV2
         );
-        i_keyHash = 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f; // MUMBAI
-        s_subscriptionId = 4205; // TODO Private Info, remove in Chainlink
+        i_keyHash = keyHash; 
+        s_subscriptionId = subscriptionId;
         i_requestConfirmations = 3;
-        i_callbackGasLimit = 2500000; // MUMBAI
+        i_callbackGasLimit = callbackGasLimit;
         i_numWords = 4;
     }
 
