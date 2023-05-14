@@ -33,7 +33,7 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         uint256 price;
         uint256 storeId;
         address reporter;
-        uint256[] assignedValidators; // replace type to address[]
+        address[] assignedValidators;
         address[] validators;
     }
 
@@ -105,17 +105,27 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         string _description
     );
 
+    event PriceReportValidatorsAssigned(
+        uint256 indexed priceReportId,
+        address[] validators
+    );
+
     event PriceReportValidated(
         uint256 indexed priceReportId,
         address indexed validator,
         uint256 validatorsCount
     );
 
+
     constructor(
         uint8 _decimals,
-        address _epns_proxy_address
+        address _epns_proxy_address,
+        address vrfCoordinatorV2,
+        uint64 subscriptionId,
+        bytes32 keyHash,
+        uint32 callbackGasLimit
     )
-        VRFConsumerBaseV2(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed) // MUMBAI
+        VRFConsumerBaseV2(vrfCoordinatorV2)
         ConfirmedOwner(msg.sender)
     {
         i_decimals = _decimals;
@@ -126,12 +136,12 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
 
         //VRF
         COORDINATOR = VRFCoordinatorV2Interface(
-            0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed // MUMBAI
+            vrfCoordinatorV2
         );
-        i_keyHash = 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f; // MUMBAI
-        s_subscriptionId = 4205; // TODO Private Info, remove in Chainlink
+        i_keyHash = keyHash; 
+        s_subscriptionId = subscriptionId;
         i_requestConfirmations = 3;
-        i_callbackGasLimit = 2500000; // MUMBAI
+        i_callbackGasLimit = callbackGasLimit;
         i_numWords = 4;
     }
 
@@ -139,20 +149,27 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         uint256 _productId,
         uint256 _price,
         uint256 _storeId
-    ) public {
-        uint256 currentPriceReportId = _priceReportIds.current();
+    ) public returns(uint256 currentPriceReportId) {
+        currentPriceReportId = _priceReportIds.current();
         s_priceReports[currentPriceReportId] = PriceReport(
             _productId,
             _price,
             _storeId,
             msg.sender,
-            new uint[](0), // TODO replace with address[]
+            new address[](0),
             new address[](0)
         );
         _priceReportIds.increment();
-
-        // when a pricereport is created, it calls a function to assign validators
-        uint256 requestId = requestRandomWords(); // assignValidators(currentPriceReportId);
+        
+        uint256 requestId = 0;
+        if (productSubscribersAll[_productId].length < 4){
+            assignValidators(currentPriceReportId, new uint256[](0));
+            console.log("HERE");
+        } else {
+            requestId = requestRandomWords();
+        }
+        
+        console.log("requestId", requestId);
         requestToPriceReport[requestId] = currentPriceReportId;
 
         emit PriceReported(
@@ -161,7 +178,7 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
             _price,
             _storeId,
             msg.sender,
-            requestId
+            requestId // Maybe I dont need this and can move the event earlier
         );
 
         address to = address(this);
@@ -285,7 +302,7 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
             i_callbackGasLimit,
             i_numWords
         );
-        console.log("Request ID: ");
+        console.log("Request ID:", requestId);
         s_requests[requestId] = RequestStatus({
             randomWords: new uint256[](0),
             exists: true,
@@ -333,18 +350,35 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         uint256 _priceReportId,
         uint256[] memory _randomWords
     ) private {
-        s_priceReports[_priceReportId].assignedValidators = _randomWords;
-        // s_priceReports[_priceReportId].assignedValidators = validators;
-        for (uint256 i = 0; i < _randomWords.length; i++) {
-            console.log("Validators: ", i, "->", _randomWords[i]);
-        }
-        // get 4 random numbers
-        //// get random numbers
+        uint256 randomWordsLength = _randomWords.length;
+        console.log("Random Words Length: ", "->", randomWordsLength);
+        
+        uint256 productId = s_priceReports[_priceReportId].productId;
+        // create temp list
+        address[] storage _productSubscribers = productSubscribersAll[productId];
 
-        // choose 4 address from productSubscribersAll
-        // add them to mapping s_assignedValidators[_priceReportId] = chosenAddress
-        // emit event
-        // notified chosen validators
+        if (randomWordsLength == 0) {
+            // Assign all available subscribers
+            s_priceReports[_priceReportId].assignedValidators = _productSubscribers;
+        } else {
+            for (uint256 i = 0; i < randomWordsLength; i++){
+                console.log("Loop: ", i);
+                console.log("_priceReportId: ", _priceReportId);
+
+                // calculate the index
+                uint256 indexOfValidator =  _randomWords[i] % _productSubscribers.length;
+                
+                // add the chosen validator to validators list
+                s_priceReports[_priceReportId].assignedValidators.push(_productSubscribers[indexOfValidator]);
+                console.log("Validators: ", i, "->", _productSubscribers[indexOfValidator]);
+
+                // Remove chosen validator from temp list
+                _productSubscribers[indexOfValidator] = _productSubscribers[_productSubscribers.length - 1];
+                _productSubscribers.pop();
+            }
+        }
+
+        emit PriceReportValidatorsAssigned(_priceReportId, s_priceReports[_priceReportId].assignedValidators);
     }
 
     /* getters */

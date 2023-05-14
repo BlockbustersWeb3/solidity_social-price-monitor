@@ -2,6 +2,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
 const { networkConfig } = require("../helper-hardhat-config");
 const { network } = require("hardhat");
+const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 
 describe("PriceMonitor", function () {
   async function deployFixture() {
@@ -10,10 +11,23 @@ describe("PriceMonitor", function () {
 
     epnsProxyAddress = networkConfig[chainId]["epnsProxyAddress"];
 
-    const PriceMonitor = await ethers.getContractFactory("PriceMonitor");
-    const priceMonitor = await PriceMonitor.deploy(2, epnsProxyAddress);
+    await deployments.fixture(["mocks", "pricemonitor"]);
 
-    return { priceMonitor, deployer, user1, user2 };
+    // const PriceMonitor = await ethers.getContractFactory("PriceMonitor");
+    // const priceMonitor = await PriceMonitor.deploy(2, epnsProxyAddress);
+
+    const priceMonitor = await ethers.getContract("PriceMonitor");
+    const vrfCoordinatorV2Mock = await ethers.getContract(
+      "VRFCoordinatorV2Mock"
+    );
+
+    return {
+      priceMonitor,
+      vrfCoordinatorV2Mock,
+      deployer,
+      user1,
+      user2,
+    };
   }
 
   describe("Deployment", function () {
@@ -25,14 +39,14 @@ describe("PriceMonitor", function () {
   });
 
   describe("PriceMonitor", function () {
-    it.only("Should create price monitoring emitting event", async function () {
+    it("Should create price monitoring emitting event", async function () {
       const { priceMonitor, deployer } = await loadFixture(deployFixture);
 
       args = [001, 1525, 001];
 
       await expect(priceMonitor.addPriceReport(...args))
         .to.emit(priceMonitor, "PriceReported")
-        .withArgs(0, ...args, deployer.address);
+        .withArgs(0, ...args, deployer.address, anyValue);
     });
 
     it("Should create price added to the list of reported prices", async function () {
@@ -135,12 +149,71 @@ describe("PriceMonitor", function () {
     });
 
     it("Price Report has completed all validations");
-    it.skip(
-      "Users are randomly assigned to be a validator out of the subscribed users", async function () {
-      const { priceMonitor, deployer } = await loadFixture(deployFixture);
 
-        expect(await priceMonitor.getChosenValidatorsCount()).to.equal(4);
+    it("Users are randomly assigned to be a validator out of the subscribed users", async function () {
+      const { priceMonitor, vrfCoordinatorV2Mock } = await loadFixture(
+        deployFixture
+      );
+      const signers = await ethers.getSigners();
+
+      const productId = 099;
+      const price = 1525;
+      const storeId = 044;
+
+      for (let i = 5; i < 15; i++) {
+        await priceMonitor.connect(signers[i]).addProductSubscriber(productId);
       }
-    );
+
+      const txResponse = await priceMonitor.addPriceReport(
+        productId,
+        price,
+        storeId
+      );
+      const txReceipt = await txResponse.wait(1);
+      priceReportId = txReceipt.events[1].args.id;
+
+      await expect(
+        vrfCoordinatorV2Mock.fulfillRandomWords(1, priceMonitor.address)
+      )
+        .to.emit(priceMonitor, "PriceReportValidatorsAssigned")
+        .withArgs(priceReportId, anyValue);
+
+      expect(
+        (await priceMonitor.getPriceReport(0)).assignedValidators.length
+      ).to.equal(4);
+      // TODO How to test that all items are different?
+    });
+
+    it("All Users are assigned to be a validators is total subscriber are less or equal than 4", async function () {
+      const { priceMonitor } = await loadFixture(deployFixture);
+      const signers = await ethers.getSigners();
+
+      const productId = 099;
+      const price = 1525;
+      const storeId = 044;
+
+      for (let i = 0; i < 3; i++) {
+        await priceMonitor.connect(signers[i]).addProductSubscriber(productId);
+      }
+
+      const txResponse = await priceMonitor.addPriceReport(
+        productId,
+        price,
+        storeId
+      );
+      const txReceipt = await txResponse.wait(1);
+      priceReportId = txReceipt.events[1].args.id;
+
+      await expect(
+        txResponse
+      )
+      .to.emit(priceMonitor, "PriceReportValidatorsAssigned")
+      .withArgs(priceReportId, anyValue);
+
+      const validators = (await priceMonitor.getPriceReport(priceReportId))
+        .assignedValidators;
+
+      expect(validators.length).to.equal(3);
+    });
   });
 });
