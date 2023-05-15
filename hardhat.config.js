@@ -2,8 +2,15 @@ require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-deploy");
 require("dotenv").config();
 
-const { GOERLI_ALCHEMY_APIKEY, GOERLI_PRIVATE_KEY, MUMBAI_APIKEY } =
-  process.env;
+const {
+  GOERLI_ALCHEMY_APIKEY,
+  GOERLI_PRIVATE_KEY,
+  MUMBAI_APIKEY,
+  USER1_PRIVATE_KEY,
+  USER2_PRIVATE_KEY,
+  USER3_PRIVATE_KEY,
+  USER4_PRIVATE_KEY,
+} = process.env;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -23,7 +30,6 @@ module.exports = {
         url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_APIKEY}`,
         // blockNumber: 34171323,
         blockNumber: 35320809,
-
       },
     },
     goerli: {
@@ -33,13 +39,31 @@ module.exports = {
     },
     mumbai: {
       url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_APIKEY}`,
-      accounts: [GOERLI_PRIVATE_KEY],
+      accounts: [
+        GOERLI_PRIVATE_KEY,
+        USER1_PRIVATE_KEY,
+        USER2_PRIVATE_KEY,
+        USER3_PRIVATE_KEY,
+        USER4_PRIVATE_KEY,
+      ],
       chainId: 80001,
     },
   },
   namedAccounts: {
     deployer: {
       default: 0, // here this will by default take the first account as deployer
+    },
+    user1: {
+      default: 1,
+    },
+    user2: {
+      default: 2,
+    },
+    user3: {
+      default: 3,
+    },
+    user4: {
+      default: 4,
     },
   },
 };

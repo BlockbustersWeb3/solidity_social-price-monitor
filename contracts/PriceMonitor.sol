@@ -44,7 +44,6 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
     }
 
     struct Store {
-        uint256 id;
         string name;
         string location;
     }
@@ -55,6 +54,7 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
 
     Counters.Counter private _priceReportIds;
     Counters.Counter private _productIds;
+    Counters.Counter private _storeIds;
 
     mapping(uint256 => Product) s_products;
     mapping(uint256 => Store) s_stores;
@@ -103,6 +103,12 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         string _name,
         string indexed _brand,
         string _description
+    );
+
+    event StoreCreated(
+        uint256 id,
+        string name,
+        string location
     );
 
     event PriceReportValidatorsAssigned(
@@ -181,32 +187,32 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
             requestId // Maybe I dont need this and can move the event earlier
         );
 
-        address to = address(this);
-        PUSHCOMM.sendNotification(
-            CHANNEL_ADDRESS, // from channel
-            to, // to recipient, put address(this) in case you want Broadcast or Subset. For Targetted put the address to which you want to send
-            bytes(
-                string(
-                    // We are passing identity here: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
-                    abi.encodePacked(
-                        "0", // this is notification identity: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
-                        "+", // segregator
-                        "1", // this is payload type: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/payload (1, 3 or 4) = (Broadcast, targetted or subset)
-                        "+", // segregator
-                        "Price Report Alert", // this is notificaiton title
-                        "+", // segregator
-                        "Check this reported price! ",
-                        " | reported by: ", // notification body
-                        msg.sender.toHexString(), // notification body
-                        " | Product: ", // notification body
-                        _productId.toString(), // notification body
-                        " | Price: ", // notification body
-                        _price.toString(), // notification body
-                        " PUSH to you!" // notification body
-                    )
-                )
-            )
-        );
+        // address to = address(this);
+        // PUSHCOMM.sendNotification(
+        //     CHANNEL_ADDRESS, // from channel
+        //     to, // to recipient, put address(this) in case you want Broadcast or Subset. For Targetted put the address to which you want to send
+        //     bytes(
+        //         string(
+        //             // We are passing identity here: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
+        //             abi.encodePacked(
+        //                 "0", // this is notification identity: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
+        //                 "+", // segregator
+        //                 "1", // this is payload type: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/payload (1, 3 or 4) = (Broadcast, targetted or subset)
+        //                 "+", // segregator
+        //                 "Price Report Alert", // this is notificaiton title
+        //                 "+", // segregator
+        //                 "Check this reported price! ",
+        //                 " | reported by: ", // notification body
+        //                 msg.sender.toHexString(), // notification body
+        //                 " | Product: ", // notification body
+        //                 _productId.toString(), // notification body
+        //                 " | Price: ", // notification body
+        //                 _price.toString(), // notification body
+        //                 " PUSH to you!" // notification body
+        //             )
+        //         )
+        //     )
+        // );
     }
 
     function addProduct(
@@ -220,36 +226,44 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
 
         emit ProductCreated(currentProductId, _name, _brand, _description);
 
-        address to = address(this);
-        PUSHCOMM.sendNotification(
-            CHANNEL_ADDRESS, // from channel
-            to, // to recipient, put address(this) in case you want Broadcast or Subset. For Targetted put the address to which you want to send
-            bytes(
-                string(
-                    // We are passing identity here: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
-                    abi.encodePacked(
-                        "0", // this is notification identity: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
-                        "+", // segregator
-                        "1", // this is payload type: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/payload (1, 3 or 4) = (Broadcast, targetted or subset)
-                        "+", // segregator
-                        "Price Report Alert: Product added", // this is notificaiton title
-                        "+", // segregator
-                        "Check this added product! ",
-                        " | reported by: ", // notification body
-                        msg.sender.toHexString(), // notification body
-                        " | Product ID: ", // notification body
-                        currentProductId.toString(), // notification body
-                        " | Name: ", // notification body
-                        _name, // notification body
-                        " | Brand: ", // notification body
-                        _brand, // notification body
-                        " | Description: ", // notification body
-                        _description, // notification body
-                        " PUSH to you!" // notification body
-                    )
-                )
-            )
-        );
+        // address to = address(this);
+        // PUSHCOMM.sendNotification(
+        //     CHANNEL_ADDRESS, // from channel
+        //     to, // to recipient, put address(this) in case you want Broadcast or Subset. For Targetted put the address to which you want to send
+        //     bytes(
+        //         string(
+        //             // We are passing identity here: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
+        //             abi.encodePacked(
+        //                 "0", // this is notification identity: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/identity/payload-identity-implementations
+        //                 "+", // segregator
+        //                 "1", // this is payload type: https://docs.epns.io/developers/developer-guides/sending-notifications/advanced/notification-payload-types/payload (1, 3 or 4) = (Broadcast, targetted or subset)
+        //                 "+", // segregator
+        //                 "Price Report Alert: Product added", // this is notificaiton title
+        //                 "+", // segregator
+        //                 "Check this added product! ",
+        //                 " | reported by: ", // notification body
+        //                 msg.sender.toHexString(), // notification body
+        //                 " | Product ID: ", // notification body
+        //                 currentProductId.toString(), // notification body
+        //                 " | Name: ", // notification body
+        //                 _name, // notification body
+        //                 " | Brand: ", // notification body
+        //                 _brand, // notification body
+        //                 " | Description: ", // notification body
+        //                 _description, // notification body
+        //                 " PUSH to you!" // notification body
+        //             )
+        //         )
+        //     )
+        // );
+    }
+
+    function addStore(string calldata _name, string calldata _location) public{
+        uint256 currentStoreId = _storeIds.current();
+        s_stores[currentStoreId] = Store(_name, _location);
+        _storeIds.increment();
+
+        emit StoreCreated(currentStoreId, _name, _location);
     }
 
     function addProductSubscriber(uint256 _productId) public {
@@ -396,6 +410,10 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         uint256 _productId
     ) public view returns (bool) {
         return productSubscribers[_productId][msg.sender];
+    }
+
+    function getProductSubscribersCount(uint256 _productId) public view returns(uint256 subscribersCount){
+        subscribersCount = productSubscribersAll[_productId].length;
     }
 
     function getValidatorsCount(
