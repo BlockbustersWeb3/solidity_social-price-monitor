@@ -97,6 +97,20 @@ describe("PriceMonitor", function () {
         .true;
     });
 
+    it("Multiple users can subscribe to a product", async function () {
+      const { priceMonitor } = await loadFixture(deployFixture);
+
+      const signers = await ethers.getSigners();
+
+      const productId = 099;
+
+      for (let i = 0; i < 5; i++) {
+        await priceMonitor.connect(signers[i]).addProductSubscriber(productId);
+      }
+
+      expect(await priceMonitor.getProductSubscribersCount(productId)).to.equal(5);
+    });
+
     it("User can unsubscribe to be a validator for price report on a specific product", async function () {
       const { priceMonitor, user1 } = await loadFixture(deployFixture);
 
