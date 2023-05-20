@@ -21,24 +21,14 @@ We want to release an MVP with these main features:
 * Victor Inojosa: [@vijoin](https://twitter.com/vijoin)
 * Edgar Lopez: [@edgarlopez241](https://twitter.com/edgarlopez241)
 * Hector Saldaña Benitez: [@s_hector](https://twitter.com/s_hector)
-* Victor Daniel Ome: [@tbd](https://twitter.com/tbd)
+* Victor Daniel Ome: [in: victor-ome](https://www.linkedin.com/in/victor-ome/)
 * David Santiago Garcia Chicangana: [@Tisandg](https://twitter.com/Tisandg)
 
 ## Communication:
 * Discord for realtime communication
 * Notion for documentation and tasks
 
-# HOW TO RUN THE PROJECT (TBD)
-
-This is a basic hardhat template to get you started writing and compiling contract.
-The template is configured with some sensible defaults but tries to stay minimal.
-It comes with most sensible plugins already installed via the suggested `hardhat-toolbox`.
-
-- [Hardhat](https://github.com/nomiclabs/hardhat): compile and run the smart contracts on a local development network
-- [TypeChain](https://github.com/ethereum-ts/TypeChain): generate TypeScript types for smart contracts
-- [Ethers](https://github.com/ethers-io/ethers.js/): renowned Ethereum library and wallet implementation
-
-Use the template by clicking the "Use this template" button at the top of the page.
+# HOW TO RUN THE PROJECT
 
 ## Usage
 
@@ -51,48 +41,32 @@ yarn install
 ```
 
 ### Compile
-
-Compile the smart contracts with Hardhat:
-
 ```sh
-yarn compile
+yarn hardhdat compile
 ```
 
 ### Test
-
-Run the tests:
-
 ```sh
-yarn test
+yarn hardhat test
 ```
 
-#### Test gas costs
-
-To get a report of gas costs, set env `REPORT_GAS` to true
-
-To take a snapshot of the contract's gas costs
-
+### Test deploy locally
 ```sh
-yarn test:gas
+`yarn hardhat deploy`
 ```
 
-### Deploy contract to network (requires Mnemonic and Infura API key)
-
+### Start a local node and deploy everything in that local node
+```sh
+`yarn hardhat node`
 ```
-npx hardhat run --network goerli ./scripts/deploy.ts
-```
 
-### Validate a contract with etherscan (requires API key)
-
-```
-npx hardhat verify --network <network> <DEPLOYED_CONTRACT_ADDRESS> "Constructor argument 1"
+### Deploy contract to a test network (requires Mnemonic and Infura API key)
+```sh
+npx hardhat deploy --network mumbai
 ```
 
 ## Thanks
-
 If you like it than you shoulda put a start ⭐ on it
-
-
 
 ## License
 
