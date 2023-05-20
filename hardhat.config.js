@@ -4,8 +4,8 @@ require("dotenv").config();
 
 const {
   GOERLI_ALCHEMY_APIKEY,
-  GOERLI_PRIVATE_KEY,
-  MUMBAI_APIKEY,
+  MUMBAI_ALCHEMY_APIKEY,
+  DEPLOYER_PRIVATE_KEY,
   USER1_PRIVATE_KEY,
   USER2_PRIVATE_KEY,
   USER3_PRIVATE_KEY,
@@ -27,13 +27,13 @@ module.exports = {
     },
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${GOERLI_ALCHEMY_APIKEY}`,
-      accounts: [GOERLI_PRIVATE_KEY],
+      accounts: [DEPLOYER_PRIVATE_KEY],
       chainId: 5,
     },
     mumbai: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_APIKEY}`,
+      url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_ALCHEMY_APIKEY}`,
       accounts: [
-        GOERLI_PRIVATE_KEY,
+        DEPLOYER_PRIVATE_KEY,
         USER1_PRIVATE_KEY,
         USER2_PRIVATE_KEY,
         USER3_PRIVATE_KEY,
