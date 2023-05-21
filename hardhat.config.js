@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-deploy");
 require("dotenv").config();
+require("hardhat-gas-reporter");
 
 const {
   GOERLI_ALCHEMY_APIKEY,
@@ -59,4 +60,10 @@ module.exports = {
       default: 4,
     },
   },
+  gasReporter: {
+    enabled: true,
+    currency: 'USD',
+    gasPrice: 150
+  
+  }
 };
