@@ -88,7 +88,6 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
     uint32 i_numWords;
 
     // Events
-
     event PriceReported(
         uint256 id,
         uint256 indexed productId,

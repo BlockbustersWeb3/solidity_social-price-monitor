@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
 require("dotenv").config();
 
@@ -20,6 +21,10 @@ module.exports = {
         version: "0.8.18",
       },
     ],
+  },
+  defaultNetwork: 'hardhat',
+  paths:{
+    artifacts:'./artifacts',
   },
   networks: {
     hardhat: {

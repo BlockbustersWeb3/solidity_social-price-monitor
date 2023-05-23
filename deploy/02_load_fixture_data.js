@@ -11,6 +11,7 @@ module.exports = async ({ deployments }) => {
      const txProductResponse = await priceMonitor.addProduct("Arroz 1KG", "Blue Patna", "Arror Normal, blanco, sin aditivios");
      const txProductReceipt = await txProductResponse.wait(1);
      const productId = txProductReceipt.events[0].args[0];
+     log(productId)
      
      // create a store
      const txStoreResponse = await priceMonitor.addStore("Tata 99", "Av 18 de Julio y Andes");
