@@ -2,11 +2,12 @@ require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-deploy");
 require("dotenv").config();
+require("hardhat-gas-reporter");
 
 const {
   GOERLI_ALCHEMY_APIKEY,
-  GOERLI_PRIVATE_KEY,
-  MUMBAI_APIKEY,
+  MUMBAI_ALCHEMY_APIKEY,
+  DEPLOYER_PRIVATE_KEY,
   USER1_PRIVATE_KEY,
   USER2_PRIVATE_KEY,
   USER3_PRIVATE_KEY,
@@ -29,23 +30,16 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 31337,
-      forking: {
-        // url: `https://eth-goerli.g.alchemy.com/v2/${GOERLI_ALCHEMY_APIKEY}`,
-        // blockNumber: 8789763,
-        url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_APIKEY}`,
-        // blockNumber: 34171323,
-        blockNumber: 35320809,
-      },
     },
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${GOERLI_ALCHEMY_APIKEY}`,
-      accounts: [GOERLI_PRIVATE_KEY],
+      accounts: [DEPLOYER_PRIVATE_KEY],
       chainId: 5,
     },
     mumbai: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_APIKEY}`,
+      url: `https://polygon-mumbai.g.alchemy.com/v2/${MUMBAI_ALCHEMY_APIKEY}`,
       accounts: [
-        GOERLI_PRIVATE_KEY,
+        DEPLOYER_PRIVATE_KEY,
         USER1_PRIVATE_KEY,
         USER2_PRIVATE_KEY,
         USER3_PRIVATE_KEY,
@@ -71,4 +65,10 @@ module.exports = {
       default: 4,
     },
   },
+  gasReporter: {
+    enabled: true,
+    currency: 'USD',
+    gasPrice: 150
+  
+  }
 };
