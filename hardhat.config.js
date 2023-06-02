@@ -9,9 +9,9 @@ const {
   MUMBAI_ALCHEMY_APIKEY,
   DEPLOYER_PRIVATE_KEY,
   USER1_PRIVATE_KEY,
-  USER2_PRIVATE_KEY,
-  USER3_PRIVATE_KEY,
-  USER4_PRIVATE_KEY,
+  // USER2_PRIVATE_KEY,
+  // USER3_PRIVATE_KEY,
+  // USER4_PRIVATE_KEY,
 } = process.env;
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -41,9 +41,9 @@ module.exports = {
       accounts: [
         DEPLOYER_PRIVATE_KEY,
         USER1_PRIVATE_KEY,
-        USER2_PRIVATE_KEY,
-        USER3_PRIVATE_KEY,
-        USER4_PRIVATE_KEY,
+        // USER2_PRIVATE_KEY,
+        // USER3_PRIVATE_KEY,
+        // USER4_PRIVATE_KEY,
       ],
       chainId: 80001,
     },

@@ -23,7 +23,7 @@
   //////////////////////////////////////////////////////
 
 
-  const { network, ethers } = require("hardhat")
+const { network, ethers } = require("hardhat")
 const {
     networkConfig,
     developmentChains,

@@ -405,6 +405,14 @@ contract PriceMonitor is VRFConsumerBaseV2, ConfirmedOwner {
         return s_products[index];
     }
 
+    function getAllProducts() public view returns (Product[] memory){
+        Product[] memory products = new Product[](_productIds.current()+1);
+        for (uint i = 0; i < _productIds.current()+1; i++) {
+            products[i] = s_products[i];
+        }
+        return products;
+    }
+
     function isSubscribedToProduct(
         uint256 _productId
     ) public view returns (bool) {
